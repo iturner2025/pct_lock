@@ -1,0 +1,2 @@
+#!/bin/bash
+streamlit run /Users/ianturner/Development/pct_lock/main.py 6
