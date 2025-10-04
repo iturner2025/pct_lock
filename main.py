@@ -82,92 +82,71 @@ def main() -> None:
     st.markdown(
         """
         <style>
-        
-        layout_styles = {
-            "div[data-testid='stHorizontalBlock']": {"margin-bottom": "0.25rem"},
-            "div[data-testid='stVerticalBlock']": {"gap": "0.25rem !important"},
-            "section.main > div.block-container": {
-                "padding-top": "0.75rem",
-                "padding-bottom": "0.75rem"
-            },
-            "div[data-baseweb='slider']": {
-                "margin-top": "0.1rem",
-                "margin-bottom": "0.1rem"
-            }
+        /* Tighten vertical spacing between rows and columns */
+        div[data-testid='stHorizontalBlock'] {
+            margin-bottom: 0.25rem;
         }
-        
-        
-        #    2. Force the primary colour to bright green everywhere
-        #    ────────────────────────────────────────────────────────────── 
-        root_styles = {
-            ":root": {
-                "--primary-color": "#00ff00 !important",
-                "--theme-primaryColor": "#00ff00 !important",
-                "--theme-primary-color": "#00ff00 !important",
-                "--slider-thumb-color": "#00ff00 !important",  # BaseWeb var
-                "--slider-track-active": "#00ff00 !important",  # custom var we’ll use
-                "--slider-track-inactive": "#d3d3d3 !important"  # grey
-            }
+        div[data-testid='stVerticalBlock'] {
+            gap: 0.25rem !important;
         }
-        
-        # /* ──────────────────────────────────────────────────────────────
-        #    3. Thumb (handle) – green, no shadow
-        #    ────────────────────────────────────────────────────────────── */
-        thumb_styles = {
-            "div[data-baseweb='slider'] [role='slider']": {
-                "background-color": "var(--primary-color) !important",
-                "border-color": "var(--primary-color) !important",
-                "box-shadow": "none !important"
-            },
-            # Focus ring – green outline
-            "div[data-baseweb='slider'] [role='slider']:focus": {
-                "outline": "2px solid var(--primary-color) !important"
-            }
+        section.main > div.block-container {
+            padding-top: 0.75rem;
+            padding-bottom: 0.75rem;
         }
-        
-        # /* ──────────────────────────────────────────────────────────────
-        #    4. Track – wipe any gradient that Streamlit injects inline
-        #    ────────────────────────────────────────────────────────────── */
-        track_styles = {
-            # 4a – BaseWeb track elements (Track, InnerTrack, etc.)
-            "div[data-baseweb='slider'] [class*='Track'], div[data-baseweb='slider'] [class*='InnerTrack']": {
-                "background-image": "none !important",
-                "background": "none !important"
-            },
-            # 4b – The *inline* gradient that Streamlit adds via style attribute
-            "div[data-baseweb='slider'] [style*='gradient'], div[data-baseweb='slider'] [style*='linear-gradient']": {
-                "background": "linear-gradient(to right, var(--slider-track-active)   0%, var(--slider-track-active)   var(--value-percentage, 0%), var(--slider-track-inactive) var(--value-percentage, 0%), var(--slider-track-inactive) 100%) !important"
-            },
-            # 4c – Fallback: any element that still receives a background colour
-            "div[data-baseweb='slider'] [class*='Track'], div[data-baseweb='slider'] [class*='InnerTrack']": {
-                "background-color": "var(--slider-track-inactive) !important"
-            },
-            # 4d – The “active” part (left of thumb) – painted by BaseWeb via ::before
-            "div[data-baseweb='slider'] [class*='Track']::before, div[data-baseweb='slider'] [class*='InnerTrack']": {
-                "background-color": "var(--slider-track-active) !important"
-            }
+
+        /* Align slider vertically within its column cell */
+        div[data-testid='stSlider'] {
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
         }
-        
-        # /* ──────────────────────────────────────────────────────────────
-        #    5. Numeric label / tooltip – green text
-        #    ────────────────────────────────────────────────────────────── */
-        tooltip_styles = {
-            "div[data-testid='stSlider'] [data-testid*='Value'], div[data-testid='stSlider'] [class*='value'], div[data-baseweb='slider'] [data-baseweb='tooltip'] *": {
-                "color": "var(--primary-color) !important",
-                "border-color": "var(--primary-color) !important"
-            }
+        div[data-baseweb='slider'] {
+            margin-top: 0.1rem !important;
+            margin-bottom: 0.1rem !important;
         }
-        
-        # /* ──────────────────────────────────────────────────────────────
-        #    6. Extra safety – catch any stray red that may come from a theme
-        #    ────────────────────────────────────────────────────────────── */
-        extra_safety_styles = {
-            "div[data-baseweb='slider'] *": {
-                # Force every child to ignore a red primary colour
-                "--primary-color": "#00ff00 !important"
-            }
+        /* Normalize internal BaseWeb slider layout to reduce extra height */
+        div[data-baseweb='slider'] > div {
+            align-items: center !important;
         }
-        
+
+        /* Keep the green theme for slider while using valid CSS */
+        :root {
+            --primary-color: #00ff00;
+            --slider-track-active: #00ff00;
+            --slider-track-inactive: #d3d3d3;
+        }
+        /* Thumb */
+        div[data-baseweb='slider'] [role='slider'] {
+            background-color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+            box-shadow: none !important;
+        }
+        div[data-baseweb='slider'] [role='slider']:focus {
+            outline: 2px solid var(--primary-color) !important;
+        }
+        /* Track */
+        div[data-baseweb='slider'] [class*='Track'],
+        div[data-baseweb='slider'] [class*='InnerTrack'] {
+            background-image: none !important;
+            background: none !important;
+            background-color: var(--slider-track-inactive) !important;
+        }
+        div[data-baseweb='slider'] [style*='gradient'],
+        div[data-baseweb='slider'] [style*='linear-gradient'] {
+            background: linear-gradient(
+                to right,
+                var(--slider-track-active) 0%,
+                var(--slider-track-active) var(--value-percentage, 0%),
+                var(--slider-track-inactive) var(--value-percentage, 0%),
+                var(--slider-track-inactive) 100%
+            ) !important;
+        }
+        /* Tooltip/value color */
+        div[data-testid='stSlider'] [data-testid*='Value'],
+        div[data-testid='stSlider'] [class*='value'],
+        div[data-baseweb='slider'] [data-baseweb='tooltip'] * {
+            color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -262,7 +241,7 @@ def main() -> None:
                     value=float(round(eff_weights[i], 2)),
                     key=f"display_weight_{i}",
                     disabled=True,
-                    label_visibility="hidden",
+                    label_visibility="collapsed",
                 )
             else:
                 # Interactive slider bound to session state
@@ -274,7 +253,7 @@ def main() -> None:
                     value=float(round(slider_weights[i], 2)),
                     key=f"weight_{i}",
                     disabled=False,
-                    label_visibility="hidden",
+                    label_visibility="collapsed",
                 )
         with c5:
             st.write(f"{weighted_scores[i]:.0f}")
