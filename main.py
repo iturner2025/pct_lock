@@ -29,8 +29,6 @@ import streamlit as st
 
 # --------------------------- Core Calculations ---------------------------
 from engine import compute_weighting_state
-
-
 # --------------------------- State Initialization ---------------------------
 
 criteria_names = [
