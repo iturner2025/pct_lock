@@ -22,21 +22,42 @@ Locking behavior:
 """
 
 from __future__ import annotations
-
 import math
 import random
 from typing import List, Tuple
-
 import streamlit as st
+
+# --------------------------- Core Calculations ---------------------------
+from engine import compute_weighting_state
 
 
 # --------------------------- State Initialization ---------------------------
 
+criteria_names = [
+    "Employee Count",
+    "Profit Margin",
+    "Proximity to Office",
+    "Company Age",
+    "% IT Staff",
+    "PE Backed",
+    "CFO Changed Recently",
+    "Has CIO",
+    "Has CISO",
+    "Industry",
+    "Company Key Word",
+    "About Us Key Words",
+    "Employee Growth",
+    "Revenue Growth",
+]
+
+
 def init_state(n: int) -> None:
     """Initialize session state for n criteria."""
     st.session_state.n = int(n)
+    # Randomly pick unique criteria names for these n rows
+    st.session_state.names = random.sample(criteria_names, int(n))
     # Generate random scores between 0 and 200 inclusive
-    st.session_state.scores = [random.randint(0, 200) for _ in range(n)]
+    st.session_state.scores = [random.randint(25, 200) for _ in range(n)]
     st.session_state.locked = [False] * n
     st.session_state.locked_pct = [0.0] * n  # stores target %-w Total (0..1) for locked rows
     # Remove any existing weight_* keys to avoid conflicts with widget-managed state
@@ -51,85 +72,102 @@ def ensure_initialized(n: int) -> None:
         init_state(n)
 
 
-# --------------------------- Core Calculations ---------------------------
-
-def compute_weighting_state(
-    scores: List[float],
-    locked: List[bool],
-    locked_pct: List[float],
-    slider_weights: List[float],
-) -> Tuple[float, List[float], List[float], List[float]]:
-    """
-    Given scores, lock flags, target locked percentages, and current unlocked slider weights,
-    compute:
-      - total weighted sum T
-      - effective weights per row (locked rows computed to maintain target %)
-      - weighted scores per row
-      - %-w Total per row (as fractions 0..1)
-    """
-    n = len(scores)
-    # Sum of target locked percentages
-    sum_locked_pct = sum(locked_pct[i] for i in range(n) if locked[i])
-
-    # Unlocked weighted sum from sliders
-    unlocked_weighted_sum = 0.0
-    for i in range(n):
-        if not locked[i]:
-            unlocked_weighted_sum += scores[i] * max(0.0, min(10.0, float(slider_weights[i])))
-
-    # Guard against invalid total locked percent
-    denom = 1.0 - sum_locked_pct
-    if denom <= 0:
-        # Avoid division by zero; T is undefined in this edge case
-        T = float("nan")
-    else:
-        T = unlocked_weighted_sum / denom
-
-    # Effective weights per row
-    eff_weights = [0.0] * n
-    weighted_scores = [0.0] * n
-    for i in range(n):
-        if locked[i]:
-            s = scores[i]
-            target = locked_pct[i]
-            if s <= 0:
-                # Score is zero: can only support 0% target share.
-                eff_w = 0.0
-            else:
-                if not math.isfinite(T):
-                    eff_w = 0.0
-                else:
-                    eff_w = (target * T) / s
-            # Constrain to slider bounds [0,10]
-            eff_w = max(0.0, min(10.0, eff_w))
-        else:
-            eff_w = max(0.0, min(10.0, float(slider_weights[i])))
-        eff_weights[i] = eff_w
-        weighted_scores[i] = scores[i] * eff_w
-
-    total_weighted = sum(weighted_scores)
-    if total_weighted <= 0:
-        pct_w_total = [0.0] * n
-    else:
-        pct_w_total = [ws / total_weighted for ws in weighted_scores]
-
-    return total_weighted, eff_weights, weighted_scores, pct_w_total
-
-
 # --------------------------- UI Rendering ---------------------------
 
 def main() -> None:
-    st.set_page_config(page_title="Criteria Weight Balancer", layout="wide")
+    st.set_page_config(page_title="ICP Criteria Balancer", layout="wide")
     st.title("Criteria Weight Balancer")
 
     # Compact UI spacing
     st.markdown(
         """
         <style>
-        div[data-testid='stHorizontalBlock'] { margin-bottom: 0.25rem; }
-        div[data-testid='stVerticalBlock'] { gap: 0.25rem !important; }
-        section.main > div.block-container { padding-top: 0.75rem; padding-bottom: 0.75rem; }
-        div[data-baseweb='slider'] { margin-top: 0.1rem; margin-bottom: 0.1rem; }
+        
+        layout_styles = {
+            "div[data-testid='stHorizontalBlock']": {"margin-bottom": "0.25rem"},
+            "div[data-testid='stVerticalBlock']": {"gap": "0.25rem !important"},
+            "section.main > div.block-container": {
+                "padding-top": "0.75rem",
+                "padding-bottom": "0.75rem"
+            },
+            "div[data-baseweb='slider']": {
+                "margin-top": "0.1rem",
+                "margin-bottom": "0.1rem"
+            }
+        }
+        
+        
+        #    2. Force the primary colour to bright green everywhere
+        #    ────────────────────────────────────────────────────────────── 
+        root_styles = {
+            ":root": {
+                "--primary-color": "#00ff00 !important",
+                "--theme-primaryColor": "#00ff00 !important",
+                "--theme-primary-color": "#00ff00 !important",
+                "--slider-thumb-color": "#00ff00 !important",  # BaseWeb var
+                "--slider-track-active": "#00ff00 !important",  # custom var we’ll use
+                "--slider-track-inactive": "#d3d3d3 !important"  # grey
+            }
+        }
+        
+        # /* ──────────────────────────────────────────────────────────────
+        #    3. Thumb (handle) – green, no shadow
+        #    ────────────────────────────────────────────────────────────── */
+        thumb_styles = {
+            "div[data-baseweb='slider'] [role='slider']": {
+                "background-color": "var(--primary-color) !important",
+                "border-color": "var(--primary-color) !important",
+                "box-shadow": "none !important"
+            },
+            # Focus ring – green outline
+            "div[data-baseweb='slider'] [role='slider']:focus": {
+                "outline": "2px solid var(--primary-color) !important"
+            }
+        }
+        
+        # /* ──────────────────────────────────────────────────────────────
+        #    4. Track – wipe any gradient that Streamlit injects inline
+        #    ────────────────────────────────────────────────────────────── */
+        track_styles = {
+            # 4a – BaseWeb track elements (Track, InnerTrack, etc.)
+            "div[data-baseweb='slider'] [class*='Track'], div[data-baseweb='slider'] [class*='InnerTrack']": {
+                "background-image": "none !important",
+                "background": "none !important"
+            },
+            # 4b – The *inline* gradient that Streamlit adds via style attribute
+            "div[data-baseweb='slider'] [style*='gradient'], div[data-baseweb='slider'] [style*='linear-gradient']": {
+                "background": "linear-gradient(to right, var(--slider-track-active)   0%, var(--slider-track-active)   var(--value-percentage, 0%), var(--slider-track-inactive) var(--value-percentage, 0%), var(--slider-track-inactive) 100%) !important"
+            },
+            # 4c – Fallback: any element that still receives a background colour
+            "div[data-baseweb='slider'] [class*='Track'], div[data-baseweb='slider'] [class*='InnerTrack']": {
+                "background-color": "var(--slider-track-inactive) !important"
+            },
+            # 4d – The “active” part (left of thumb) – painted by BaseWeb via ::before
+            "div[data-baseweb='slider'] [class*='Track']::before, div[data-baseweb='slider'] [class*='InnerTrack']": {
+                "background-color": "var(--slider-track-active) !important"
+            }
+        }
+        
+        # /* ──────────────────────────────────────────────────────────────
+        #    5. Numeric label / tooltip – green text
+        #    ────────────────────────────────────────────────────────────── */
+        tooltip_styles = {
+            "div[data-testid='stSlider'] [data-testid*='Value'], div[data-testid='stSlider'] [class*='value'], div[data-baseweb='slider'] [data-baseweb='tooltip'] *": {
+                "color": "var(--primary-color) !important",
+                "border-color": "var(--primary-color) !important"
+            }
+        }
+        
+        # /* ──────────────────────────────────────────────────────────────
+        #    6. Extra safety – catch any stray red that may come from a theme
+        #    ────────────────────────────────────────────────────────────── */
+        extra_safety_styles = {
+            "div[data-baseweb='slider'] *": {
+                # Force every child to ignore a red primary colour
+                "--primary-color": "#00ff00 !important"
+            }
+        }
+        
         </style>
         """,
         unsafe_allow_html=True,
@@ -140,15 +178,22 @@ def main() -> None:
         n = st.number_input(
             "How many criteria?",
             min_value=2,
-            max_value=20,
-            value=5,
+            max_value=len(criteria_names),
+            value=6,
             step=1,
-            help="Enter a number from 2 to 20.",
+            help=f"Enter a number from 2 to {len(criteria_names)}.",
         )
         ensure_initialized(int(n))
 
         if st.button("Regenerate Scores", help="Randomize scores 0–200 and reset locks."):
-            init_state(int(n))
+            # Only regenerate scores and reset locks/targets; keep names as-is
+            st.session_state.scores = [random.randint(0, 200) for _ in range(int(n))]
+            st.session_state.locked = [False] * int(n)
+            st.session_state.locked_pct = [0.0] * int(n)
+            # Remove any existing weight_* keys to avoid conflicts
+            for k in list(st.session_state.keys()):
+                if isinstance(k, str) and k.startswith("weight_"):
+                    del st.session_state[k]
             # Trigger full rerun
             try:
                 st.rerun()
@@ -199,22 +244,22 @@ def main() -> None:
 
     for i in range(n):
         c1, c2, c3, c4, c5, c6, c7 = st.columns([2.0, 1.2, 1.2, 3.0, 1.6, 1.6, 1.1], gap="small")
-        name = f"Criteria {i + 1}"
+        name = st.session_state.names[i] if "names" in st.session_state and i < len(st.session_state.names) else f"Criteria {i + 1}"
         with c1:
             st.write(name)
         with c2:
             st.write(f"{scores[i]:.0f}")
         with c3:
-            st.write(f"{(score_pct[i] * 100):.2f}%")
+            st.write(f"{(score_pct[i] * 100):.0f}%")
         with c4:
             if locked[i]:
                 # Show disabled slider reflecting computed effective weight
                 st.slider(
-                    label="Weighting",
+                    label="",
                     min_value=0.0,
                     max_value=10.0,
-                    value=float(round(eff_weights[i], 2)),
                     step=0.1,
+                    value=float(round(eff_weights[i], 2)),
                     key=f"display_weight_{i}",
                     disabled=True,
                     label_visibility="collapsed",
@@ -222,19 +267,20 @@ def main() -> None:
             else:
                 # Interactive slider bound to session state
                 new_val = st.slider(
-                    label="Weighting",
+                    label="",
                     min_value=0.0,
                     max_value=10.0,
-                    value=float(round(slider_weights[i], 2)),
                     step=0.1,
+                    value=float(round(slider_weights[i], 2)),
                     key=f"weight_{i}",
+                    disabled=False,
                     label_visibility="collapsed",
                 )
         with c5:
-            st.write(f"{weighted_scores[i]:.2f}")
+            st.write(f"{weighted_scores[i]:.0f}")
         with c6:
             pct_display = pct_w_total[i] * 100.0
-            st.write(f"{pct_display:.2f}%")
+            st.write(f"{pct_display:.0f}%")
         with c7:
             icon = "🔒" if locked[i] else "🔓"
             pressed = st.button(icon, key=f"lockbtn_{i}", help=(
@@ -282,13 +328,13 @@ def main() -> None:
     with c2:
         st.markdown(f"**{total_score:.0f}**")
     with c3:
-        st.markdown(f"**{sum_score_pct:.2f}%**")
+        st.markdown(f"**{sum_score_pct:.0f}%**")
     with c4:
         st.markdown("")
     with c5:
-        st.markdown(f"**{T:.2f}**" if math.isfinite(T) else "**—**")
+        st.markdown(f"**{T:.0f}**" if math.isfinite(T) else "**—**")
     with c6:
-        st.markdown(f"**{sum_pct_w:.2f}%**")
+        st.markdown(f"**{sum_pct_w:.0f}%**")
     with c7:
         st.markdown("")
 
@@ -296,7 +342,7 @@ def main() -> None:
     with st.expander("Details & Notes"):
         st.markdown(
             "- Weighted Total: "
-            + (f"{T:.2f}" if math.isfinite(T) else "(not defined when locked total ≥ 100%)")
+            + (f"{T:.0f}" if math.isfinite(T) else "(not defined when locked total ≥ 100%)")
         )
         locked_rows = [i + 1 for i, v in enumerate(st.session_state.locked) if v]
         if locked_rows:
@@ -308,7 +354,7 @@ def main() -> None:
             for i in range(n)
             if st.session_state.locked[i]
         )
-        st.markdown(f"- Total locked %-w: {total_locked_pct * 100:.2f}%")
+        st.markdown(f"- Total locked %-w: {total_locked_pct * 100:.0f}%")
         if total_locked_pct >= 1.0:
             st.error("Invalid state: total locked %-w is 100% or more. Unlock one or more rows.")
 
