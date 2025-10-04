@@ -38,14 +38,14 @@ def compute_weighting_state(
       layer should prevent or display an error for this case.
     - Effective weights are clamped to [0, 10] to respect slider bounds.
     """
-    n = len(scores)
+    item_count = len(scores)
 
     # Sum of target locked percentages
-    sum_locked_pct = sum(locked_pct[i] for i in range(n) if locked[i])
+    sum_locked_pct = sum(locked_pct[i] for i in range(item_count) if locked[i])
 
     # Unlocked weighted sum from sliders
     unlocked_weighted_sum = 0.0
-    for i in range(n):
+    for i in range(item_count):
         if not locked[i]:
             # Clamp slider values to [0, 10]
             w = max(0.0, min(10.0, float(slider_weights[i])))
@@ -60,9 +60,9 @@ def compute_weighting_state(
         T = unlocked_weighted_sum / denom
 
     # Effective weights per row
-    eff_weights = [0.0] * n
-    weighted_scores = [0.0] * n
-    for i in range(n):
+    eff_weights = [0.0] * item_count
+    weighted_scores = [0.0] * item_count
+    for i in range(item_count):
         if locked[i]:
             s = scores[i]
             target = locked_pct[i]
@@ -83,7 +83,7 @@ def compute_weighting_state(
 
     total_weighted = sum(weighted_scores)
     if total_weighted <= 0:
-        pct_w_total = [0.0] * n
+        pct_w_total = [0.0] * item_count
     else:
         pct_w_total = [ws / total_weighted for ws in weighted_scores]
 
