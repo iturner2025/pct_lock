@@ -15,7 +15,7 @@ def compute_weighting_state(
     scores: List[float],
     locked: List[bool],
     locked_pct: List[float],
-    slider_weights: List[float],
+    weighting: List[float],
 ) -> Tuple[float, List[float], List[float], List[float]]:
     """
     Compute the effective weighting state for all rows given the current inputs.
@@ -48,7 +48,7 @@ def compute_weighting_state(
     for i in range(item_count):
         if not locked[i]:
             # Clamp slider values to [0, 10]
-            w = max(0.0, min(10.0, float(slider_weights[i])))
+            w = max(0.0, min(10.0, float(weighting[i])))
             unlocked_weighted_sum += scores[i] * w
 
     # Guard against invalid total locked percent
@@ -77,7 +77,7 @@ def compute_weighting_state(
             # Constrain to slider bounds [0,10]
             eff_w = max(0.0, min(10.0, eff_w))
         else:
-            eff_w = max(0.0, min(10.0, float(slider_weights[i])))
+            eff_w = max(0.0, min(10.0, float(weighting[i])))
         eff_weights[i] = eff_w
         weighted_scores[i] = scores[i] * eff_w
 

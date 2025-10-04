@@ -29,8 +29,8 @@ import streamlit as st
 
 # --------------------------- Core Calculations ---------------------------
 from engine import compute_weighting_state
-# --------------------------- State Initialization ---------------------------
 
+# --------------------------- State Initialization ---------------------------
 criteria_names = [
     "Employee Count",
     "Profit Margin",
@@ -74,7 +74,7 @@ def ensure_initialized(n: int) -> None:
 
 def main() -> None:
     st.set_page_config(page_title="ICP Criteria Balancer", layout="wide")
-    st.title("Criteria Weight Balancer")
+    st.title("ICP Criteria Balancer")
 
     # Compact UI spacing
     st.markdown(
@@ -307,7 +307,7 @@ def main() -> None:
     with c3:
         st.markdown(f"**{sum_score_pct:.0f}%**")
     with c4:
-        st.markdown("")
+        st.markdown("--")
     with c5:
         st.markdown(f"**{T:.0f}**" if math.isfinite(T) else "**—**")
     with c6:
