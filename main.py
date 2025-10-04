@@ -228,7 +228,7 @@ def main() -> None:
     # Display headers
     header_cols = st.columns([2.0, 1.2, 1.2, 3.0, 1.6, 1.6, 1.1], gap="small")
     headers = [
-        "Criteria Name",
+        "Criteria",
         "Score",
         "% of Total",
         "Weighting",
@@ -262,7 +262,7 @@ def main() -> None:
                     value=float(round(eff_weights[i], 2)),
                     key=f"display_weight_{i}",
                     disabled=True,
-                    label_visibility="collapsed",
+                    label_visibility="hidden",
                 )
             else:
                 # Interactive slider bound to session state
@@ -274,7 +274,7 @@ def main() -> None:
                     value=float(round(slider_weights[i], 2)),
                     key=f"weight_{i}",
                     disabled=False,
-                    label_visibility="collapsed",
+                    label_visibility="hidden",
                 )
         with c5:
             st.write(f"{weighted_scores[i]:.0f}")
