@@ -1,0 +1,65 @@
+/* Tighten vertical spacing between rows and columns */
+div[data-testid='stHorizontalBlock'] {
+    margin-bottom: 0.25rem;
+}
+div[data-testid='stVerticalBlock'] {
+    gap: 0.25rem !important;
+}
+section.main > div.block-container {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+}
+
+/* Align slider vertically within its column cell */
+div[data-testid='stSlider'] {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+div[data-baseweb='slider'] {
+    margin-top: 0.1rem !important;
+    margin-bottom: 0.1rem !important;
+}
+/* Normalize internal BaseWeb slider layout to reduce extra height */
+div[data-baseweb='slider'] > div {
+    align-items: center !important;
+}
+
+/* Keep the green theme for slider while using valid CSS */
+:root {
+    --primary-color: #00ff00;
+    --slider-track-active: #00ff00;
+    --slider-track-inactive: #d3d3d3;
+}
+/* Thumb */
+div[data-baseweb='slider'] [role='slider'] {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    box-shadow: none !important;
+}
+div[data-baseweb='slider'] [role='slider']:focus {
+    outline: 2px solid var(--primary-color) !important;
+}
+/* Track */
+div[data-baseweb='slider'] [class*='Track'],
+div[data-baseweb='slider'] [class*='InnerTrack'] {
+    background-image: none !important;
+    background: none !important;
+    background-color: var(--slider-track-inactive) !important;
+}
+div[data-baseweb='slider'] [style*='gradient'],
+div[data-baseweb='slider'] [style*='linear-gradient'] {
+    background: linear-gradient(
+        to right,
+        var(--slider-track-active) 0%,
+        var(--slider-track-active) var(--value-percentage, 0%),
+        var(--slider-track-inactive) var(--value-percentage, 0%),
+        var(--slider-track-inactive) 100%
+    ) !important;
+}
+/* Tooltip/value color */
+div[data-testid='stSlider'] [data-testid*='Value'],
+div[data-testid='stSlider'] [class*='value'],
+div[data-baseweb='slider'] [data-baseweb='tooltip'] * {
+    color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
