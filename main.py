@@ -1,4 +1,34 @@
 """
+Prompt:
+
+Build an app that allows a user to balance the weightings of a set of scores - in this case these are criteria scores.
+Build a UI with 6 columns, 1) [Criteria Name] 2) [Score] 3) [% of Total] of all criteria scores 4) [Weighting] a float
+number rounded to two decimal places 5) [Weighted Score] - calculated as [Score] * [Weighting] 6) [Weighted Score]
+as % of Total Weighted Score, called  [%-w Total].
+
+Add a padlock symbol to the right of each row next to the [w—%Total] and as default all padlocks are open. The title
+for the column of padlocks is [w-%-Lock]
+
+The ui should show the Weighting as a slider from 0 to 10 in
+increments of 0.1
+
+When the app loads, it asks for the number of criteria where valid answers are 2-20 - then the UI displays the table
+on row for each of the criteria (named sequentially) and each score should be a random number from 0 to 200.
+
+The user can move the sliders for each criteria and the app will re-calculate the [%-w Total] and [Weighted Score] as
+the slider moves.
+
+If the user locks a row by clicking on its padlock, the padlock toggles to locked - the user can no longer edit/change
+the [Weighting] slider for that row.
+
+How when a slider is moved the value of the [w-%-Total] is recalculated for un-locked rows as is the weighting of
+the locked rows such that the [w-%-Total] remains at the % when it was locked.
+
+The objective of the app is to arrive at a set of [Weighting] values that allows the user to balance the scores.
+For example if Criteria 2 needs to be 25% of the overall weighted score - and Criteria 10 needs to be 10% - the
+user can then adjust the [Weighting] values for all the un-locked Criteria to arrive at a set of Weightings.
+Clearly the a % score is locked the weighting for that row will need to change to balance the remaining to 100%
+
 Criteria Weight Balancer
 
 Run with: streamlit run main.py
@@ -46,6 +76,7 @@ criteria_names = [
     "About Us Key Words",
     "Employee Growth",
     "Revenue Growth",
+    "Age of Founder"
 ]
 
 
@@ -55,7 +86,7 @@ def init_state(n: int) -> None:
     # Randomly pick unique criteria names for these n rows
     st.session_state.names = random.sample(criteria_names, int(n))
     # Generate random scores between 0 and 200 inclusive
-    st.session_state.scores = [random.randint(25, 200) for _ in range(n)]
+    st.session_state.scores = [random.randint(25, 175) for _ in range(n)]
     st.session_state.locked = [False] * n
     st.session_state.locked_pct = [0.0] * n  # stores target %-w Total (0..1) for locked rows
     # Remove any existing weight_* keys to avoid conflicts with widget-managed state
@@ -70,24 +101,26 @@ def ensure_initialized(n: int) -> None:
         init_state(n)
 
 
-def load_css(path: str = "styles.css") -> None:
-    """Load CSS from a file and inject into the Streamlit app."""
+def load_css(path: str = "styles.css") -> str:
+    """Load CSS from a file."""
     try:
         with open(path, "r", encoding="utf-8") as f:
             css = f.read()
-        st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
+            return css
     except FileNotFoundError:
         st.warning(f"CSS file not found: {path}")
-
 
 # --------------------------- UI Rendering ---------------------------
 
 def main() -> None:
-    st.set_page_config(page_title="ICP Criteria Balancer", layout="wide")
-    st.title("ICP Criteria Balancer")
-
     # Load compact UI spacing and slider theme from external CSS
-    load_css()
+    css = load_css()
+
+    if css:
+        st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
+
+    st.set_page_config(page_title="Balance ICP Criteria", layout="wide")
+    st.title("Balance ICP Criteria")
 
     with st.sidebar:
         st.markdown("### Setup")

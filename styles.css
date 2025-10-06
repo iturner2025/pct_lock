@@ -6,12 +6,12 @@ div[data-testid='stVerticalBlock'] {
     gap: 0.25rem !important;
 }
 section.main > div.block-container {
-    padding-top: 0.75rem;
-    padding-bottom: 0.75rem;
+    padding-top: 0.70rem;
+    padding-bottom: 0.70rem;
 }
 
 /* Align slider vertically within its column cell */
-div[data-testid='stSlider'] {
+div[data-testid='slider'] {
     margin-top: 0 !important;
     margin-bottom: 0 !important;
 }
@@ -26,9 +26,9 @@ div[data-baseweb='slider'] > div {
 
 /* Keep the green theme for slider while using valid CSS */
 :root {
-    --primary-color: #00ff00;
+    --primary-color: #ff0000;
     --slider-track-active: #00ff00;
-    --slider-track-inactive: #d3d3d3;
+    /*--slider-track-inactive: #d7df7d;*/
 }
 /* Thumb */
 div[data-baseweb='slider'] [role='slider'] {
@@ -39,27 +39,40 @@ div[data-baseweb='slider'] [role='slider'] {
 div[data-baseweb='slider'] [role='slider']:focus {
     outline: 2px solid var(--primary-color) !important;
 }
+
+/* Filled track (left side) */
+div[data-baseweb="slider"] > div > div:nth-child(1) {
+    background: #00d12d !important; /* green */
+}
+
+/* Unfilled track (right side) */
+div[data-baseweb="slider"] > div > div:nth-child(2) {
+    background: #d3d3d3 !important; /* light grey */
+}
+
 /* Track */
-div[data-baseweb='slider'] [class*='Track'],
-div[data-baseweb='slider'] [class*='InnerTrack'] {
-    background-image: none !important;
-    background: none !important;
-    background-color: var(--slider-track-inactive) !important;
-}
-div[data-baseweb='slider'] [style*='gradient'],
-div[data-baseweb='slider'] [style*='linear-gradient'] {
-    background: linear-gradient(
-        to right,
-        var(--slider-track-active) 0%,
-        var(--slider-track-active) var(--value-percentage, 0%),
-        var(--slider-track-inactive) var(--value-percentage, 0%),
-        var(--slider-track-inactive) 100%
-    ) !important;
-}
-/* Tooltip/value color */
+/*div[data-baseweb='slider'] [class*='Track'],*/
+/*div[data-baseweb='slider'] [class*='InnerTrack'] {*/
+/*    background-image: none !important;*/
+/*    background: none !important;*/
+/*    !*background-color: var(--slider-track-inactive) !important;*!*/
+/*}*/
+
+/*div[data-baseweb='slider'] [style*='gradient'],*/
+/*div[data-baseweb='slider'] [style*='linear-gradient'] {*/
+/*    background: linear-gradient(*/
+/*        to right,*/
+/*        var(--slider-track-active) 0%,*/
+/*        !*var(--slider-track-active) var(--value-percentage, 0%),*!*/
+/*        !*var(--slider-track-inactive) var(--value-percentage, 0%),*!*/
+/*        !*var(--slider-track-inactive) 100%*!*/
+/*    ) !important;*/
+/*}*/
+/* Tooltip/value color
 div[data-testid='stSlider'] [data-testid*='Value'],
 div[data-testid='stSlider'] [class*='value'],
 div[data-baseweb='slider'] [data-baseweb='tooltip'] * {
     color: var(--primary-color) !important;
     border-color: var(--primary-color) !important;
 }
+*/
